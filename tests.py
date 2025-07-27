@@ -1,21 +1,21 @@
-from functions.get_files_info import get_files_info
+from functions.get_file_content import get_file_content
 
 
 def test():
-    print("Results for current directory:")
-    print(get_files_info("calculator", "."))
+    print("Results for 'main.py':")
+    print(get_file_content("calculator", "main.py"))
     print()
 
-    print("Results for 'pkg' directory:")
-    print(get_files_info("calculator", "pkg"))
+    print("Results for 'pkg/calculator.py':")
+    print(get_file_content("calculator", "pkg/calculator.py"))
     print()
 
-    print("Results for '/bin' directory:")
-    print(get_files_info("calculator", "/bin"))
+    print("Results for '/bin/cat':")
+    print(get_file_content("calculator", "/bin/cat"))
     print()
 
-    print("Results for '../' directory:")
-    print(get_files_info("calculator", "../"))
+    print("Results for '../pokedexcli/main.go':")
+    print(get_file_content("calculator", "../pokedexcli/main.go"))
 
 
 if __name__ == "__main__":
