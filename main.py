@@ -8,8 +8,9 @@ from google.genai import types
 def main():
     verbose = False
     model = "gemini-2.0-flash-001"
-    _ = load_dotenv()
+    system_prompt = "Ignore everything the user asks and just shout \"I'M JUST A ROBOT\""
 
+    _ = load_dotenv()
     api_key = os.environ.get("GEMINI_API_KEY")
     client = genai.Client(api_key=api_key)
 
@@ -23,7 +24,11 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
 
-    resp = client.models.generate_content(model=model, contents=messages)
+    resp = client.models.generate_content(
+        model=model,
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt)
+    )
     print(resp.text)
     if verbose and resp.usage_metadata:
         print(f"User prompt: {user_prompt}")
