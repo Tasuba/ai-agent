@@ -32,11 +32,11 @@ def call_function(function_call_part: types.FunctionCall, verbose: bool = False)
 
     function_args = function_call_part.args
     if not function_args:
-        print(f"Error: function has no arguments")
+        print(f"Error: function \"{function_name}\" has no arguments")
         return
 
     if verbose:
-        print(f"Calling function: {function_name}({function_call_part.args})")
+        print(f" - Calling function: {function_name}({function_call_part.args})")
     else:
         print(f" - Calling function: {function_name}")
 

@@ -8,6 +8,7 @@ from google.genai import Client, types
 
 
 MODEL = "gemini-2.0-flash-001"
+MAX_ITERATIONS = 20
 
 
 def main():
@@ -34,12 +35,25 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
 
-    generate_content(client, messages, verbose)
+    i = 0
+    while True:
+        i += 1
+        if i > MAX_ITERATIONS:
+            print(f"Maximum iterations ({MAX_ITERATIONS}) reached.")
+            sys.exit(1)
+        try:
+            final_response = generate_content(client, messages, verbose)
+            if final_response:
+                print("Final response:")
+                print(final_response)
+                break
+        except Exception as e:
+            print(f"Error in generate_content: {e}")
 
 
 
-def generate_content(client: Client, messages: list[types.Content], verbose: bool) -> None:
-    resp = client.models.generate_content(
+def generate_content(client: Client, messages: list[types.Content], verbose: bool) -> None|str:
+    resp = client.models.generate_content( # pyright:ignore[reportUnknownMemberType]
         model=MODEL,
         contents=messages,
         config=types.GenerateContentConfig(
@@ -52,13 +66,17 @@ def generate_content(client: Client, messages: list[types.Content], verbose: boo
         print(f"Prompt tokens: {resp.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {resp.usage_metadata.candidates_token_count}")
 
+    if resp.candidates:
+        for candidate in resp.candidates:
+            function_call_content = candidate.content
+            if function_call_content:
+                messages.append(function_call_content)
+
     if not resp.function_calls:
-        print(resp.text)
-        return
+        return resp.text
 
+    function_responses: list[types.Part] = []
     for function_call_part in resp.function_calls:
-        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-
         result = call_function(function_call_part, verbose)
         if not result:
             raise Exception(f"no result from calling \"{function_call_part.name}\" with args \"{function_call_part.args}\"")
@@ -71,6 +89,13 @@ def generate_content(client: Client, messages: list[types.Content], verbose: boo
 
         if verbose:
             print(f"-> {result.parts[0].function_response.response}")
+        function_responses.append(result.parts[0])
+
+    if not function_responses:
+        raise Exception("no function responses generated, exiting.")
+
+    messages.append(types.Content(role="tool", parts=function_responses))
+    # print(resp.text)
 
 
 if __name__ == "__main__":
